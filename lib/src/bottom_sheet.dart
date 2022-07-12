@@ -3,12 +3,8 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
 import 'package:modal_bottom_sheet/src/utils/scroll_to_top_status_bar.dart';
 
 import 'package:modal_bottom_sheet/src/utils/bottom_sheet_suspended_curve.dart';
@@ -49,7 +45,7 @@ class ModalBottomSheet extends StatefulWidget {
     required this.expanded,
     required this.onClosing,
     required this.child,
-  })   : assert(enableDrag != null),
+  })  : assert(enableDrag != null),
         assert(onClosing != null),
         assert(child != null),
         super(key: key);
@@ -300,7 +296,7 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
       if (_velocityTracker == null) {
         //final pointerKind = defaultPointerDeviceKind(context);
         // ignore: deprecated_member_use
-        _velocityTracker = VelocityTracker();
+        _velocityTracker = VelocityTracker.withKind(PointerDeviceKind.touch);
         _startTime = DateTime.now();
       }
 
@@ -333,8 +329,8 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
   @override
   void initState() {
     animationCurve = _defaultCurve;
-    _bounceDragController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+    _bounceDragController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
 
     // Todo: Check if we can remove scroll Controller
     super.initState();
@@ -407,8 +403,8 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
     );
 
     return ScrollToTopStatusBarHandler(
-      child: child,
       scrollController: _scrollController,
+      child: child,
     );
   }
 }
@@ -489,5 +485,4 @@ PointerDeviceKind defaultPointerDeviceKind(BuildContext context) {
     case TargetPlatform.fuchsia:
       return PointerDeviceKind.unknown;
   }
-  return PointerDeviceKind.unknown;
 }
