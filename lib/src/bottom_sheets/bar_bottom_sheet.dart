@@ -90,7 +90,7 @@ Future<T?> showBarModalBottomSheet<T>({
   Duration? duration,
   RouteSettings? routeSettings,
   ScrollController? scrollController,
-  ValueNotifier? changeInternalStateNotifier,
+  ValueNotifier<BottomSheetState>? changeInternalStateNotifier,
 }) async {
   assert(context != null);
   assert(builder != null);

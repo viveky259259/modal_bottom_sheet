@@ -1,0 +1,4 @@
+enum BottomSheetState {
+  dismissible,
+  nonDismissible,
+}
