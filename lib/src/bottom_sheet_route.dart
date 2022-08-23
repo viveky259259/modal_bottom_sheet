@@ -142,11 +142,21 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
     this.bounce = false,
     this.animationCurve,
     this.duration,
+    this.changeInternalStateNotifier,
     RouteSettings? settings,
   })  : assert(expanded != null),
         assert(isDismissible != null),
         assert(enableDrag != null),
-        super(settings: settings);
+        super(settings: settings) {
+    changeInternalStateNotifier?.addListener(() {
+      if (changeInternalStateNotifier?.value != null) {
+        if (changeInternalStateNotifier?.value == true) {
+          isDismissible = false;
+          super.changedInternalState();
+        }
+      }
+    });
+  }
 
   final double? closeProgressThreshold;
   final WidgetWithChildBuilder? containerBuilder;
@@ -154,9 +164,10 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
   final bool expanded;
   final bool bounce;
   final Color? modalBarrierColor;
-  final bool isDismissible;
+  bool isDismissible;
   final bool enableDrag;
   final ScrollController? scrollController;
+  final ValueNotifier? changeInternalStateNotifier;
 
   final Duration? duration;
 

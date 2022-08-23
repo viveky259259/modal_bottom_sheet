@@ -90,6 +90,7 @@ Future<T?> showBarModalBottomSheet<T>({
   Duration? duration,
   RouteSettings? routeSettings,
   ScrollController? scrollController,
+  ValueNotifier? changeInternalStateNotifier,
 }) async {
   assert(context != null);
   assert(builder != null);
@@ -103,6 +104,7 @@ Future<T?> showBarModalBottomSheet<T>({
       .push(ModalBottomSheetRoute<T>(
     builder: builder,
     bounce: bounce,
+    changeInternalStateNotifier: changeInternalStateNotifier,
     closeProgressThreshold: closeProgressThreshold,
     containerBuilder: (_, __, child) => BarBottomSheet(
       child: child,
