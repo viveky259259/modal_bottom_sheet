@@ -12,10 +12,14 @@ import 'modals/modal_inside_modal.dart';
 import 'modals/modal_will_scope.dart';
 import 'modals/modal_with_navigator.dart';
 import 'modals/modal_with_nested_scroll.dart';
+import 'modals/modal_with_notifier.dart';
 import 'modals/modal_with_scroll.dart';
 import 'modals/modal_with_page_view.dart';
 
 import 'examples/cupertino_share.dart';
+
+ValueNotifier<BottomSheetState> bottomSheetStateNotifier =
+    ValueNotifier(BottomSheetState.nonDismissible);
 
 void main() => runApp(MyApp());
 
@@ -144,12 +148,12 @@ class _MyHomePageState extends State<MyHomePage> {
                               expand: true,
                               context: context,
                               backgroundColor: Colors.transparent,
-                              builder: (context) => ModalInsideModal(),
-                              // Change this to BottomSheetState.dismissible 
+                              builder: (context) =>
+                                  ModalInsideModalWithStateChangeNotifier(),
+                              // Change this to BottomSheetState.dismissible
                               // to see the difference
-                              changeInternalStateNotifier: ValueNotifier(
-                                BottomSheetState.nonDismissible,
-                              ),
+                              changeInternalStateNotifier:
+                                  bottomSheetStateNotifier,
                             )),
                     ListTile(
                         title: Text('Avatar Modal'),
