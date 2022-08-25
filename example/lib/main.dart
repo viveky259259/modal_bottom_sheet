@@ -139,6 +139,19 @@ class _MyHomePageState extends State<MyHomePage> {
                               builder: (context) => ModalInsideModal(),
                             )),
                     ListTile(
+                        title: Text('Bar Modal with Notifier'),
+                        onTap: () => showBarModalBottomSheetWithNotifier(
+                              expand: true,
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => ModalInsideModal(),
+                              // Change this to BottomSheetState.dismissible 
+                              // to see the difference
+                              changeInternalStateNotifier: ValueNotifier(
+                                BottomSheetState.nonDismissible,
+                              ),
+                            )),
+                    ListTile(
                         title: Text('Avatar Modal'),
                         onTap: () => showAvatarModalBottomSheet(
                               expand: true,

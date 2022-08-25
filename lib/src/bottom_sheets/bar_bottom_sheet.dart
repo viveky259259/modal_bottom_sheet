@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../modal_bottom_sheet.dart';
-import '../bottom_sheet_route.dart';
-
 const Radius _default_bar_top_radius = Radius.circular(15);
 
 class BarBottomSheet extends StatelessWidget {
@@ -70,6 +68,57 @@ class BarBottomSheet extends StatelessWidget {
   }
 }
 
+Future<T?> showBarModalBottomSheetWithNotifier<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  required ValueNotifier<BottomSheetState> changeInternalStateNotifier,
+  Color? backgroundColor,
+  double? elevation,
+  ShapeBorder? shape,
+  double? closeProgressThreshold,
+  Clip? clipBehavior,
+  Color barrierColor = Colors.black87,
+  bool bounce = true,
+  bool expand = false,
+  AnimationController? secondAnimation,
+  Curve? animationCurve,
+  bool useRootNavigator = false,
+  bool isDismissible = true,
+  bool enableDrag = true,
+  Widget? topControl,
+  Duration? duration,
+  RouteSettings? routeSettings,
+  ScrollController? scrollController,
+}) async {
+  assert(debugCheckHasMediaQuery(context));
+  assert(debugCheckHasMaterialLocalizations(context));
+  final result = await Navigator.of(context, rootNavigator: useRootNavigator)
+      .push(ModalBottomSheetRouteWithNotifier<T>(
+    builder: builder,
+    bounce: bounce,
+    changeInternalStateNotifier: changeInternalStateNotifier,
+    closeProgressThreshold: closeProgressThreshold,
+    containerBuilder: (_, __, child) => BarBottomSheet(
+      control: topControl,
+      clipBehavior: clipBehavior,
+      shape: shape,
+      elevation: elevation,
+      child: child,
+    ),
+    secondAnimationController: secondAnimation,
+    expanded: expand,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    isDismissible: isDismissible,
+    modalBarrierColor: barrierColor,
+    enableDrag: enableDrag,
+    animationCurve: animationCurve,
+    duration: duration,
+    settings: routeSettings,
+    scrollController: scrollController,
+  ));
+  return result;
+}
+
 Future<T?> showBarModalBottomSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -90,7 +139,6 @@ Future<T?> showBarModalBottomSheet<T>({
   Duration? duration,
   RouteSettings? routeSettings,
   ScrollController? scrollController,
-  ValueNotifier<BottomSheetState>? changeInternalStateNotifier,
 }) async {
   assert(context != null);
   assert(builder != null);
@@ -104,7 +152,6 @@ Future<T?> showBarModalBottomSheet<T>({
       .push(ModalBottomSheetRoute<T>(
     builder: builder,
     bounce: bounce,
-    changeInternalStateNotifier: changeInternalStateNotifier,
     closeProgressThreshold: closeProgressThreshold,
     containerBuilder: (_, __, child) => BarBottomSheet(
       child: child,
