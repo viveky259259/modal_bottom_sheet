@@ -1,13 +1,248 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:modal_bottom_sheet/src/utils/modal_scroll_controller.dart';
 
 import '../modal_bottom_sheet.dart';
 
 const Duration _bottomSheetDuration = Duration(milliseconds: 400);
+
+/// A route for displaying modal bottom sheet that uses a notifier to
+/// change the internal state.
+class ModalBottomSheetRouteWithNotifier<T> extends PopupRoute<T> {
+  ModalBottomSheetRouteWithNotifier({
+    this.closeProgressThreshold,
+    this.containerBuilder,
+    required this.builder,
+    this.scrollController,
+    this.barrierLabel,
+    this.secondAnimationController,
+    this.modalBarrierColor,
+    this.isDismissible = true,
+    this.enableDrag = true,
+    required this.expanded,
+    this.bounce = false,
+    this.animationCurve,
+    this.duration,
+    required this.changeInternalStateNotifier,
+    RouteSettings? settings,
+  }) : super(settings: settings) {
+    isDismissible =
+        changeInternalStateNotifier.value == BottomSheetState.dismissible;
+
+    // Listen to the notifier to change the internal state.
+    changeInternalStateNotifier.addListener(() {
+      BottomSheetState bottomSheetState = changeInternalStateNotifier.value;
+      if (bottomSheetState == BottomSheetState.dismissible) {
+        isDismissible = true;
+      } else {
+        isDismissible = false;
+      }
+
+      super.changedInternalState();
+    });
+  }
+
+  final double? closeProgressThreshold;
+  final WidgetWithChildBuilder? containerBuilder;
+  final WidgetBuilder builder;
+  final bool expanded;
+  final bool bounce;
+  final Color? modalBarrierColor;
+  bool isDismissible;
+  final bool enableDrag;
+  final ScrollController? scrollController;
+  final ValueNotifier<BottomSheetState> changeInternalStateNotifier;
+
+  final Duration? duration;
+
+  final AnimationController? secondAnimationController;
+  final Curve? animationCurve;
+
+  @override
+  Duration get transitionDuration => duration ?? _bottomSheetDuration;
+
+  @override
+  bool get barrierDismissible => isDismissible;
+
+  @override
+  final String? barrierLabel;
+
+  @override
+  Color get barrierColor => modalBarrierColor ?? Colors.black.withOpacity(0.35);
+
+  AnimationController? _animationController;
+
+  @override
+  AnimationController createAnimationController() {
+    assert(_animationController == null);
+    _animationController = ModalBottomSheet.createAnimationController(
+      navigator!.overlay!,
+      duration: transitionDuration,
+    );
+    return _animationController!;
+  }
+
+  bool get _hasScopedWillPopCallback => hasScopedWillPopCallback;
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
+    // By definition, the bottom sheet is aligned to the bottom of the page
+    // and isn't exposed to the top padding of the MediaQuery.
+    Widget bottomSheet = MediaQuery.removePadding(
+      context: context,
+      // removeTop: true,
+      child: _ModalBottomSheetWithNotifier<T>(
+        closeProgressThreshold: closeProgressThreshold,
+        changeInternalStateNotifier: changeInternalStateNotifier,
+        route: this,
+        secondAnimationController: secondAnimationController,
+        expanded: expanded,
+        bounce: bounce,
+        enableDrag: enableDrag,
+        animationCurve: animationCurve,
+      ),
+    );
+    return bottomSheet;
+  }
+
+  @override
+  bool canTransitionTo(TransitionRoute<dynamic> nextRoute) =>
+      nextRoute is ModalBottomSheetRoute;
+
+  @override
+  bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) =>
+      previousRoute is ModalBottomSheetRoute || previousRoute is PageRoute;
+
+  Widget getPreviousRouteTransition(
+    BuildContext context,
+    Animation<double> secondAnimation,
+    Widget child,
+  ) {
+    return child;
+  }
+}
+
+class _ModalBottomSheetWithNotifier<T> extends StatefulWidget {
+  const _ModalBottomSheetWithNotifier({
+    Key? key,
+    this.closeProgressThreshold,
+    required this.route,
+    this.secondAnimationController,
+    this.bounce = false,
+    this.expanded = false,
+    this.enableDrag = true,
+    this.animationCurve,
+    this.changeInternalStateNotifier,
+  }) : super(key: key);
+
+  final double? closeProgressThreshold;
+  final ModalBottomSheetRouteWithNotifier<T> route;
+  final bool expanded;
+  final bool bounce;
+  final bool enableDrag;
+  final AnimationController? secondAnimationController;
+  final Curve? animationCurve;
+  final ValueNotifier<BottomSheetState>? changeInternalStateNotifier;
+
+  @override
+  ___ModalBottomSheetWithNotifierState<T> createState() =>
+      ___ModalBottomSheetWithNotifierState<T>();
+}
+
+class ___ModalBottomSheetWithNotifierState<T>
+    extends State<_ModalBottomSheetWithNotifier<T>> {
+  String _getRouteLabel() {
+    final platform = Theme.of(context).platform; //?? defaultTargetPlatform;
+    switch (platform) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return '';
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+        if (Localizations.of(context, MaterialLocalizations) != null) {
+          return MaterialLocalizations.of(context).dialogLabel;
+        } else {
+          return const DefaultMaterialLocalizations().dialogLabel;
+        }
+    }
+  }
+
+  ScrollController? _scrollController;
+
+  @override
+  void initState() {
+    widget.route.animation?.addListener(updateController);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.route.animation?.removeListener(updateController);
+    _scrollController?.dispose();
+    super.dispose();
+  }
+
+  void updateController() {
+    final animation = widget.route.animation;
+    if (animation != null) {
+      widget.secondAnimationController?.value = animation.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    assert(debugCheckHasMediaQuery(context));
+    assert(widget.route._animationController != null);
+    final scrollController = PrimaryScrollController.of(context) ??
+        (_scrollController ??= ScrollController());
+    return ModalScrollController(
+      controller: scrollController,
+      child: Builder(
+        builder: (context) => AnimatedBuilder(
+          animation: widget.route._animationController!,
+          builder: (BuildContext context, final Widget? child) {
+            assert(child != null);
+            // Disable the initial animation when accessible navigation is on so
+            // that the semantics are added to the tree at the correct time.
+            return Semantics(
+              scopesRoute: true,
+              namesRoute: true,
+              label: _getRouteLabel(),
+              explicitChildNodes: true,
+              child: ModalBottomSheet(
+                closeProgressThreshold: widget.closeProgressThreshold,
+                expanded: widget.route.expanded,
+                bottomSheetStateNotifier: widget.changeInternalStateNotifier,
+                containerBuilder: widget.route.containerBuilder,
+                animationController: widget.route._animationController!,
+                shouldClose: widget.route._hasScopedWillPopCallback
+                    ? () async {
+                        final willPop = await widget.route.willPop();
+                        return willPop != RoutePopDisposition.doNotPop;
+                      }
+                    : null,
+                onClosing: () {
+                  if (widget.route.isCurrent) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                enableDrag: widget.enableDrag,
+                bounce: widget.bounce,
+                scrollController: scrollController,
+                animationCurve: widget.animationCurve,
+                child: child!,
+              ),
+            );
+          },
+          child: widget.route.builder(context),
+        ),
+      ),
+    );
+  }
+}
 
 class _ModalBottomSheet<T> extends StatefulWidget {
   const _ModalBottomSheet({
@@ -19,9 +254,7 @@ class _ModalBottomSheet<T> extends StatefulWidget {
     this.expanded = false,
     this.enableDrag = true,
     this.animationCurve,
-  })  : assert(expanded != null),
-        assert(enableDrag != null),
-        super(key: key);
+  }) : super(key: key);
 
   final double? closeProgressThreshold;
   final ModalBottomSheetRoute<T> route;
@@ -49,7 +282,7 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
         if (Localizations.of(context, MaterialLocalizations) != null) {
           return MaterialLocalizations.of(context).dialogLabel;
         } else {
-          return DefaultMaterialLocalizations().dialogLabel;
+          return const DefaultMaterialLocalizations().dialogLabel;
         }
     }
   }
@@ -112,11 +345,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
                     Navigator.of(context).pop();
                   }
                 },
-                child: child!,
                 enableDrag: widget.enableDrag,
                 bounce: widget.bounce,
                 scrollController: scrollController,
                 animationCurve: widget.animationCurve,
+                child: child!,
               ),
             );
           },
@@ -143,10 +376,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
     this.animationCurve,
     this.duration,
     RouteSettings? settings,
-  })  : assert(expanded != null),
-        assert(isDismissible != null),
-        assert(enableDrag != null),
-        super(settings: settings);
+  }) : super(settings: settings);
 
   final double? closeProgressThreshold;
   final WidgetWithChildBuilder? containerBuilder;
@@ -154,7 +384,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
   final bool expanded;
   final bool bounce;
   final Color? modalBarrierColor;
-  final bool isDismissible;
+  bool isDismissible;
   final bool enableDrag;
   final ScrollController? scrollController;
 
@@ -246,13 +476,6 @@ Future<T?> showCustomModalBottomSheet<T>({
   bool enableDrag = true,
   Duration? duration,
 }) async {
-  assert(context != null);
-  assert(builder != null);
-  assert(containerWidget != null);
-  assert(expand != null);
-  assert(useRootNavigator != null);
-  assert(isDismissible != null);
-  assert(enableDrag != null);
   assert(debugCheckHasMediaQuery(context));
   assert(debugCheckHasMaterialLocalizations(context));
   final hasMaterialLocalizations =

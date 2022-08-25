@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:modal_bottom_sheet/src/utils/scroll_to_top_status_bar.dart';
+import 'package:modal_bottom_sheet/src/utils/bottom_sheet_states.dart';
 
 import 'package:modal_bottom_sheet/src/utils/bottom_sheet_suspended_curve.dart';
 
@@ -45,6 +46,7 @@ class ModalBottomSheet extends StatefulWidget {
     this.containerBuilder,
     this.bounce = true,
     this.shouldClose,
+    this.bottomSheetStateNotifier,
     required this.scrollController,
     required this.expanded,
     required this.onClosing,
@@ -106,6 +108,8 @@ class ModalBottomSheet extends StatefulWidget {
   final bool enableDrag;
 
   final ScrollController scrollController;
+
+  final ValueNotifier<BottomSheetState>? bottomSheetStateNotifier;
 
   @override
   _ModalBottomSheetState createState() => _ModalBottomSheetState();
@@ -188,7 +192,20 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
 
   void _handleDragUpdate(double primaryDelta) async {
     animationCurve = Curves.linear;
-    assert(widget.enableDrag, 'Dragging is disabled');
+
+    // If notifier is provided, then disabling the drag depends on the value
+    // of the notifier.
+    if (widget.bottomSheetStateNotifier?.value != null) {
+      if (widget.bottomSheetStateNotifier?.value ==
+          BottomSheetState.nonDismissible) {
+        return;
+      }
+    } else {
+      assert(
+        widget.enableDrag,
+        'Dragging is disabled',
+      );
+    }
 
     if (_dismissUnderway) return;
     isDragging = true;
@@ -219,7 +236,19 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
   }
 
   void _handleDragEnd(double velocity) async {
-    assert(widget.enableDrag, 'Dragging is disabled');
+    // If notifier is provided, then disabling the drag depends on the value
+    // of the notifier.
+    if (widget.bottomSheetStateNotifier?.value != null) {
+      if (widget.bottomSheetStateNotifier?.value ==
+          BottomSheetState.nonDismissible) {
+        return;
+      }
+    } else {
+      assert(
+        widget.enableDrag,
+        'Dragging is disabled',
+      );
+    }
 
     animationCurve = BottomSheetSuspendedCurve(
       widget.animationController.value,
