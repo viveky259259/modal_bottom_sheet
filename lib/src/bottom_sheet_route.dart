@@ -6,6 +6,8 @@ import '../modal_bottom_sheet.dart';
 
 const Duration _bottomSheetDuration = Duration(milliseconds: 400);
 
+/// A route for displaying modal bottom sheet that uses a notifier to
+/// change the internal state.
 class ModalBottomSheetRouteWithNotifier<T> extends PopupRoute<T> {
   ModalBottomSheetRouteWithNotifier({
     this.closeProgressThreshold,
@@ -27,6 +29,7 @@ class ModalBottomSheetRouteWithNotifier<T> extends PopupRoute<T> {
     isDismissible =
         changeInternalStateNotifier.value == BottomSheetState.dismissible;
 
+    // Listen to the notifier to change the internal state.
     changeInternalStateNotifier.addListener(() {
       BottomSheetState bottomSheetState = changeInternalStateNotifier.value;
       if (bottomSheetState == BottomSheetState.dismissible) {

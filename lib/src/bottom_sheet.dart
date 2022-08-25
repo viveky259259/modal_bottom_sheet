@@ -192,11 +192,12 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
 
   void _handleDragUpdate(double primaryDelta) async {
     animationCurve = Curves.linear;
+
+    // If notifier is provided, then disabling the drag depends on the value
+    // of the notifier.
     if (widget.bottomSheetStateNotifier?.value != null) {
-      if (widget.enableDrag &&
-          (widget.bottomSheetStateNotifier?.value ==
-              BottomSheetState.dismissible)) {
-      } else {
+      if (widget.bottomSheetStateNotifier?.value ==
+          BottomSheetState.nonDismissible) {
         return;
       }
     } else {
@@ -235,11 +236,11 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
   }
 
   void _handleDragEnd(double velocity) async {
+    // If notifier is provided, then disabling the drag depends on the value
+    // of the notifier.
     if (widget.bottomSheetStateNotifier?.value != null) {
-      if (widget.enableDrag &&
-          (widget.bottomSheetStateNotifier?.value ==
-              BottomSheetState.dismissible)) {
-      } else {
+      if (widget.bottomSheetStateNotifier?.value ==
+          BottomSheetState.nonDismissible) {
         return;
       }
     } else {
